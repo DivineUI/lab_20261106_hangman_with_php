@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #eef3f7;
+            color: #1f2d3d;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #signin-screen,
+        #setup-screen,
+        #leaderboard-screen,
+        #game-screen {
+            max-width: 480px;
+            margin: 20px auto;
+            padding: 20px 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        #setup-screen,
+        #leaderboard-screen,
+        #game-screen {
+            display: none;
+        }
+
+        #leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+
+        #leaderboard-table th,
+        #leaderboard-table td {
+            padding: 8px;
+        }
+
+        #signin-screen label {
+            display: block;
+            margin-top: 12px;
+            text-align: left;
+        }
+
+        #signin-screen input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 2px solid #9aa8b2;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #2f6f8f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #245870;
+        }
+
+        button:disabled,
+        button:disabled:hover {
+            background: #9aa8b2;
+            cursor: not-allowed;
+        }
+
+        #keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        #keyboard button {
+            width: 40px;
+            padding: 8px 0;
+            margin: 0;
+        }
+
+        #word-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #word-container h1 {
+            margin: 10px 0;
+            min-width: 28px;
+            text-transform: uppercase;
+        }
+
+        #message {
+            min-height: 1.5em;
+            font-weight: bold;
+            color: #2f6f8f;
+        }
+
+        body.dark {
+            background: #1b2430;
+            color: #e6edf3;
+        }
+
+        body.dark #signin-screen,
+        body.dark #setup-screen,
+        body.dark #leaderboard-screen,
+        body.dark #game-screen {
+            background: #263445;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark #signin-screen input {
+            background: #1b2430;
+            color: #e6edf3;
+            border-color: #5b6b7a;
+        }
+
+        body.dark #message {
+            color: #7cc4e4;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="signin-screen">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Type your Username" />
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Type your Password" />
+        <div id="confirm-box" hidden>
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" placeholder="Retype your Password" />
+        </div>
+        <p id="player-message"></p>
+        <button id="Continue-button">Continue</button>
+    </div>
+    <div id="setup-screen">
+        <p><span id="setup-avatar"></span>
+            <strong id="setup-name"></strong>
+            <button id="setup-logout-button">Log out</button>
+        </p>
+        <p>
+            <label for="picture-input">Profile picture:</label>
+            <input type="file" id="picture-input" accept="image/*">
+        </p>
+        <p id="picture-message"></p>
+        <p id="setup-message"></p>
+
+        <h2>Choose theme</h2>
+        <label><input type="radio" name="theme" value="light" checked> Light</label>
+        <label><input type="radio" name="theme" value="dark"> Dark</label>
+
+        <h2>Choose level</h2>
+        <label><input type="radio" name="level" value="easy" checked> Easy</label>
+        <label><input type="radio" name="level" value="normal"> Normal</label>
+
+        <p><button id="start-button">Start</button></p>
+    </div>
+    <div id="game-screen">
+        <span id="game-avatar"></span>
+        <p>Player: <strong id="current-name"></strong>
+            <button id="logout-button">Log out</button>
+        </p>
+        <h1>Hangman Game!!</h1>
+        <h1>Guess the word!!</h1>
+        <p>Level: <strong id="level-name"></strong></p>
+        <p>Score: <strong id="score">0</strong></p>
+        <img id="hangman-image" src="hangman_stages_images/hangman_stage_1.png" width="200px" height="200px"
+            alt="Hangman Image" />
+        <div id="word-container"></div>
+        <p id="attempts">Attempts: 0/6</p>
+        <div>
+            <button id="restart-button">Re-start</button>
+            <button id="hint-button">Hint</button>
+            <button id="end-button">End</button>
+            <button id="leaderboard-button" hidden>Leaderboard</button>
+        </div>
+        <p id="hint-text"></p>
+        <div id="keyboard"></div>
+        <p id="message"></p>
+    </div>
+    <div id="leaderboard-screen">
+        <h1>Leaderboard</h1>
+        <table id="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Total points</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+        </table>
+        <button id="play-again-button">Play again</button>
+    </div>
+
+    <script>
+        var word_list = [];
+        var word = "";
+        var hint = "";
+        var max_wrong = 6;
+        var wrong_guesses = 0;
+        var game_over = false;
+        var signin_screen = document.getElementById("signin-screen");
+        var game_screen = document.getElementById("game-screen");
+        var continue_button = document.getElementById("Continue-button");
+        var restart_button = document.getElementById("restart-button");
+        var hint_button = document.getElementById("hint-button");
+        var hint_text = document.getElementById("hint-text");
+        var keyboard = document.getElementById("keyboard");
+        var spaces = document.getElementById("word-container");
+        var attempts = document.getElementById("attempts");
+        var hangman_image = document.getElementById("hangman-image");
+        var message = document.getElementById("message");
+        var username_input = document.getElementById("username");
+        var password_input = document.getElementById("password");
+        var confirm_box = document.getElementById("confirm-box");
+        var confirm_input = document.getElementById("confirm-password");
+        var player_message = document.getElementById("player-message");
+        var PLAYERS_KEY = "hangman_players";
+        var COOKIE_NAME = "hangman_current_player";
+        var logout_button = document.getElementById("logout-button");
+        var current_name = document.getElementById("current-name");
+        var setup_screen = document.getElementById("setup-screen");
+        var setup_name = document.getElementById("setup-name");
+        var setup_logout_button = document.getElementById("setup-logout-button");
+        var start_button = document.getElementById("start-button");
+        var level_name = document.getElementById("level-name");
+        var current_player = "";
+        var current_level = "easy";
+        var setup_message = document.getElementById("setup-message");
+        var round_score = 0;
+        var hint_used = false;
+        var score_text = document.getElementById("score");
+        var end_button = document.getElementById("end-button");
+        var leaderboard_button = document.getElementById("leaderboard-button");
+        var leaderboard_screen = document.getElementById("leaderboard-screen");
+        var leaderboard_body = document.getElementById("leaderboard-body");
+        var round_id = "";
+        var MAX_PICTURE = 200000;
+        var picture_input = document.getElementById("picture-input");
+        var picture_message = document.getElementById("picture-message");
+        var setup_avatar = document.getElementById("setup-avatar");
+        var game_avatar = document.getElementById("game-avatar");
+
+        function loadPlayers() {
+            var text = localStorage.getItem(PLAYERS_KEY);
+            if (text === null) {
+                return [];
+            }
+            return JSON.parse(text);
+        }
+        function savePlayers(players) {
+            localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
+        }
+
+        function findPlayer(username) {
+            var players = loadPlayers();
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].username === username) {
+                    return players[i];
+                }
+            }
+            return null;
+        }
+        function saveTheme(username, theme) {
+            var players = loadPlayers();
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].username === username) {
+                    players[i].theme = theme;
+                }
+            }
+            savePlayers(players);
+        }
+        function makeAvatar(username) {
+            var player = findPlayer(username);
+            if (player !== null && player.picture) {
+                var img = document.createElement("img");
+                img.className = "avatar";
+                img.src = player.picture;
+                img.alt = username;
+                return img;
+            }
+            var circle = document.createElement("span");
+            circle.className = "avatar";
+            circle.textContent = username.charAt(0).toUpperCase();
+            return circle;
+        }
+
+        function showAvatars() {
+            setup_avatar.innerHTML = "";
+            setup_avatar.appendChild(makeAvatar(current_player));
+            game_avatar.innerHTML = "";
+            game_avatar.appendChild(makeAvatar(current_player));
+        }
+        function savePicture(username, picture) {
+            var players = loadPlayers();
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].username === username) {
+                    players[i].picture = picture;
+                }
+            }
+            try {
+                savePlayers(players);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+        function setCookie(name, value, days) {
+            document.cookie = name + "=" + encodeURIComponent(value) +
+                "; max-age=" + (days * 24 * 60 * 60) + "; path=/";
+        }
+        function getCookie(name) {
+            var parts = document.cookie.split("; ");
+            for (let i = 0; i < parts.length; i++) {
+                var pair = parts[i].split("=");
+                if (pair[0] === name) {
+                    return decodeURIComponent(pair[1]);
+                }
+            }
+            return null;
+        }
+        function deleteCookie(name) {
+            document.cookie = name + "=; max-age=0; path=/";
+        }
+        function buildKeyboard() {
+            keyboard.innerHTML = "";
+            for (let code = 65; code <= 90; code++) {
+                let letter = String.fromCharCode(code).toLowerCase();
+                let key = document.createElement("button");
+                key.textContent = letter.toUpperCase();
+                key.addEventListener("click", function () {
+                    key.disabled = true;      // a letter can only be used once
+                    handleGuess(letter);
+                });
+                keyboard.appendChild(key);
+            }
+        }
+        function setKeysDisabled(disabled) {
+            var keys = keyboard.querySelectorAll("button");
+            for (let i = 0; i < keys.length; i++) {
+                keys[i].disabled = disabled;
+            }
+        }
+        async function startNewGame() {
+            var form = new FormData();
+            form.append("level", current_level);
+            var response = await fetch("start.php", { method: "POST", body: form });
+            if (!response.ok) {
+                return false;
+            }
+            var data = await response.json();
+
+            max_wrong = data.maxWrong;
+            wrong_guesses = 0;
+            game_over = false;
+            round_score = 0;
+            hint_used = false;
+            score_text.textContent = 0;
+            hangman_image.src = "hangman_stages_images/hangman_stage_1.png";
+            attempts.innerText = "Attempts: 0/" + data.maxWrong;
+            hint_text.innerText = "";
+            message.innerText = "";
+            leaderboard_button.hidden = true;
+            setKeysDisabled(false);
+            showPattern(data.masked);
+            return true;
+        }
+        function showPattern(pattern) {
+            spaces.innerHTML = "";
+            for (let i = 0; i < pattern.length; i++) {
+                let space = document.createElement("h1");
+                space.id = "letter_" + i;
+                space.innerText = pattern[i];
+                spaces.appendChild(space);
+            }
+        }
+        function endGame(text, won) {
+            game_over = true;
+            message.innerText = text;
+            setKeysDisabled(true);
+            addPoints(current_player, current_level, round_score);
+            leaderboard_button.hidden = false;
+        }
+        async function handleGuess(letter) {
+            if (game_over) {
+                return;
+            }
+            var response = await fetch("guess.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ roundId: round_id, letter: letter })
+            });
+            if (!response.ok) {
+                message.innerText = "The server could not check that guess.";
+                return;
+            }
+            var data = await response.json();
+
+            showPattern(data.masked);
+            round_score = data.score;
+            score_text.textContent = data.score;
+            wrong_guesses = data.wrong;
+            attempts.innerText = "Attempts: " + data.wrong + "/" + max_wrong;
+            hangman_image.src = "hangman_stages_images/hangman_stage_" + (data.wrong + 1) + ".png";
+            message.innerText = data.correct ? "Correct!" : "Wrong guess.";
+
+            if (data.over && data.won) {
+                endGame("You win! The word was " + data.word + ".", true);
+            } else if (data.over) {
+                endGame("You lose! The word was " + data.word + ".", false);
+            }
+        }
+        function applyTheme(theme) {
+            document.body.classList.toggle("dark", theme === "dark");
+        }
+        function showSetup(username) {
+            current_player = username;
+            signin_screen.style.display = "none";
+            game_screen.style.display = "none";
+            setup_screen.style.display = "block";
+            setup_name.textContent = username;
+            current_name.textContent = username;
+            var player = findPlayer(username);
+            var theme = player.theme || "light";
+            applyTheme(theme);
+            document.querySelector('input[name="theme"][value="' + theme + '"]').checked = true;
+            picture_message.textContent = "";
+            showAvatars();
+        }
+        function showGame() {
+            setup_screen.style.display = "none";
+            game_screen.style.display = "block";
+        }
+        function showSignIn() {
+            setup_screen.style.display = "none";
+            game_screen.style.display = "none";
+            signin_screen.style.display = "block";
+            username_input.value = "";
+            password_input.value = "";
+            confirm_input.value = "";
+            confirm_box.hidden = true;
+            player_message.textContent = "";
+            applyTheme("light");
+        }
+        function addPoints(username, level, points) {
+            var players = loadPlayers();
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].username === username) {
+                    if (!players[i].scores) {
+                        players[i].scores = { easy: 0, normal: 0 };
+                    }
+                    players[i].scores[level] += points;
+                }
+            }
+            savePlayers(players);
+        }
+        function getTopPlayers(level) {
+            var players = loadPlayers();
+            var ranked = [];
+            for (let i = 0; i < players.length; i++) {
+                var points = players[i].scores ? players[i].scores[level] : 0;
+                if (points > 0) {
+                    ranked.push({ username: players[i].username, points: points });
+                }
+            }
+            ranked.sort(function (a, b) {
+                return b.points - a.points;
+            });
+            return ranked.slice(0, 3);
+        }
+        function showLeaderboard(level) {
+            var top = getTopPlayers(level);
+            leaderboard_body.innerHTML = "";
+
+            for (let i = 0; i < top.length; i++) {
+                var row = document.createElement("tr");
+                var values = [i + 1, top[i].username, top[i].points];
+                for (let j = 0; j < values.length; j++) {
+                    var cell = document.createElement("td");
+                    cell.textContent = values[j];
+                    row.appendChild(cell);
+                }
+                if (top[i].username === current_player) {
+                    row.style.fontWeight = "bold";
+                }
+                leaderboard_body.appendChild(row);
+            }
+        }
+        // Event listeners
+        continue_button.addEventListener("click", function () {
+            var name = username_input.value.trim();
+            var password = password_input.value;
+            var player = findPlayer(name);
+
+            if (name === "") {
+                player_message.textContent = "Please type a username.";
+                return;
+            }
+            if (password.length < 4) {
+                player_message.textContent = "The password must have at least 4 characters.";
+                return;
+            }
+
+            if (player === null) {
+                if (password !== confirm_input.value) {
+                    player_message.textContent = "The passwords do not match.";
+                    return;
+                }
+                var players = loadPlayers();
+                players.push({ username: name, password: password });
+                savePlayers(players);
+            } else {
+                if (player.password !== password) {
+                    player_message.textContent = "Wrong password. Try again.";
+                    return;
+                }
+            }
+            setCookie(COOKIE_NAME, name, 7);
+            showSetup(name);
+        });
+        restart_button.addEventListener("click", startNewGame);
+        hint_button.addEventListener("click", async function () {
+            if (game_over) {
+                return;
+            }
+            var response = await fetch("hint.php", { method: "POST" });
+            if (!response.ok) {
+                return;
+            }
+            var data = await response.json();
+            hint_text.innerText = "Hint: " + data.hint;
+            round_score = data.score;
+            score_text.textContent = data.score;
+        });
+        username_input.addEventListener("input", function () {
+            var name = username_input.value.trim();
+            confirm_box.hidden = (name === "" || findPlayer(name) !== null);
+        });
+        function logOut() {
+            deleteCookie(COOKIE_NAME);
+            showSignIn();
+        }
+
+        logout_button.addEventListener("click", logOut);
+        setup_logout_button.addEventListener("click", logOut);
+
+        start_button.addEventListener("click", async function () {
+            current_level = document.querySelector('input[name="level"]:checked').value;
+            level_name.textContent = current_level;
+            setup_message.textContent = "Loading...";
+
+            var started = await startNewGame();
+            if (!started) {
+                setup_message.textContent = "Could not start a round. Please try again.";
+                return;
+            }
+
+            setup_message.textContent = "";
+            showGame();
+        });
+        var theme_radios = document.querySelectorAll('input[name="theme"]');
+        for (let i = 0; i < theme_radios.length; i++) {
+            theme_radios[i].addEventListener("change", function () {
+                applyTheme(theme_radios[i].value);
+                saveTheme(current_player, theme_radios[i].value);
+            });
+        }
+        buildKeyboard();
+        var saved_name = getCookie(COOKIE_NAME);
+        if (saved_name !== null && findPlayer(saved_name) !== null) {
+            showSetup(saved_name);
+        }
+        end_button.addEventListener("click", async function () {
+            if (game_over) {
+                return;
+            }
+            var response = await fetch("end.php", { method: "POST" });
+            if (!response.ok) {
+                return;
+            }
+            var data = await response.json();
+            round_score = data.score;
+            score_text.textContent = data.score;
+            endGame("Round ended. The word was " + data.word + ". You keep " + data.score + " points.", false);
+        });
+        leaderboard_button.addEventListener("click", function () {
+            game_screen.style.display = "none";
+            leaderboard_screen.style.display = "block";
+            showLeaderboard(current_level);
+        });
+        document.getElementById("play-again-button").addEventListener("click", function () {
+            leaderboard_screen.style.display = "none";
+            game_screen.style.display = "block";
+            startNewGame();
+        });
+        picture_input.addEventListener("change", function () {
+            var file = picture_input.files[0];
+            if (!file) {
+                return;
+            }
+            if (!file.type.startsWith("image/")) {
+                picture_message.textContent = "Please choose an image file.";
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.addEventListener("load", function () {
+                var data = reader.result;   // Base64 text, like "data:image/jpeg;base64,..."
+                if (data.length > MAX_PICTURE) {
+                    picture_message.textContent = "That picture is too big. Please choose a smaller one.";
+                    picture_input.value = "";
+                    return;
+                }
+                if (savePicture(current_player, data)) {
+                    picture_message.textContent = "Picture saved.";
+                    showAvatars();
+                } else {
+                    picture_message.textContent = "Could not save the picture. Please choose a smaller one.";
+                }
+            });
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+
+</html>

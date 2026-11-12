@@ -1,0 +1,46 @@
+{
+    "easy": [
+        {
+            "word": "camera",
+            "hint": "A device for taking pictures"
+        },
+        {
+            "word": "rice",
+            "hint": "A grain often eaten with stew"
+        },
+        {
+            "word": "mango",
+            "hint": "A sweet tropical fruit"
+        },
+        {
+            "word": "river",
+            "hint": "Flowing water that runs to the sea"
+        },
+        {
+            "word": "phone",
+            "hint": "A portable device for communication"
+        }
+    ],
+    "normal": [
+        {
+            "word": "elephant",
+            "hint": "The largest animal that lives on land"
+        },
+        {
+            "word": "calculator",
+            "hint": "A machine you use to write to perform calculations"
+        },
+        {
+            "word": "mountain",
+            "hint": "A very high natural hill"
+        },
+        {
+            "word": "calendar",
+            "hint": "Shows the days and months of the year"
+        },
+        {
+            "word": "umbrella",
+            "hint": "Covers and keeps you dry in the rain"
+        }
+    ]
+}
