@@ -142,23 +142,16 @@
         <input type="text" id="username" placeholder="Type your Username" />
         <label for="password">Password</label>
         <input type="password" id="password" placeholder="Type your Password" />
-        <div id="confirm-box" hidden>
-            <label for="confirm-password">Confirm Password</label>
-            <input type="password" id="confirm-password" placeholder="Retype your Password" />
-        </div>
         <p id="player-message"></p>
-        <button id="Continue-button">Continue</button>
+        <button id="Continue-button">Log in</button>
+    </div>
+    <p id="player-message"></p>
+    <button id="Continue-button">Continue</button>
     </div>
     <div id="setup-screen">
-        <p><span id="setup-avatar"></span>
-            <strong id="setup-name"></strong>
+        <p>Player: <strong id="setup-name"></strong>
             <button id="setup-logout-button">Log out</button>
         </p>
-        <p>
-            <label for="picture-input">Profile picture:</label>
-            <input type="file" id="picture-input" accept="image/*">
-        </p>
-        <p id="picture-message"></p>
         <p id="setup-message"></p>
 
         <h2>Choose theme</h2>
@@ -172,7 +165,6 @@
         <p><button id="start-button">Start</button></p>
     </div>
     <div id="game-screen">
-        <span id="game-avatar"></span>
         <p>Player: <strong id="current-name"></strong>
             <button id="logout-button">Log out</button>
         </p>
@@ -210,9 +202,6 @@
     </div>
 
     <script>
-        var word_list = [];
-        var word = "";
-        var hint = "";
         var max_wrong = 6;
         var wrong_guesses = 0;
         var game_over = false;
@@ -229,11 +218,8 @@
         var message = document.getElementById("message");
         var username_input = document.getElementById("username");
         var password_input = document.getElementById("password");
-        var confirm_box = document.getElementById("confirm-box");
-        var confirm_input = document.getElementById("confirm-password");
         var player_message = document.getElementById("player-message");
         var PLAYERS_KEY = "hangman_players";
-        var COOKIE_NAME = "hangman_current_player";
         var logout_button = document.getElementById("logout-button");
         var current_name = document.getElementById("current-name");
         var setup_screen = document.getElementById("setup-screen");
@@ -245,18 +231,11 @@
         var current_level = "easy";
         var setup_message = document.getElementById("setup-message");
         var round_score = 0;
-        var hint_used = false;
         var score_text = document.getElementById("score");
         var end_button = document.getElementById("end-button");
         var leaderboard_button = document.getElementById("leaderboard-button");
         var leaderboard_screen = document.getElementById("leaderboard-screen");
         var leaderboard_body = document.getElementById("leaderboard-body");
-        var round_id = "";
-        var MAX_PICTURE = 200000;
-        var picture_input = document.getElementById("picture-input");
-        var picture_message = document.getElementById("picture-message");
-        var setup_avatar = document.getElementById("setup-avatar");
-        var game_avatar = document.getElementById("game-avatar");
 
         function loadPlayers() {
             var text = localStorage.getItem(PLAYERS_KEY);
@@ -277,67 +256,6 @@
                 }
             }
             return null;
-        }
-        function saveTheme(username, theme) {
-            var players = loadPlayers();
-            for (let i = 0; i < players.length; i++) {
-                if (players[i].username === username) {
-                    players[i].theme = theme;
-                }
-            }
-            savePlayers(players);
-        }
-        function makeAvatar(username) {
-            var player = findPlayer(username);
-            if (player !== null && player.picture) {
-                var img = document.createElement("img");
-                img.className = "avatar";
-                img.src = player.picture;
-                img.alt = username;
-                return img;
-            }
-            var circle = document.createElement("span");
-            circle.className = "avatar";
-            circle.textContent = username.charAt(0).toUpperCase();
-            return circle;
-        }
-
-        function showAvatars() {
-            setup_avatar.innerHTML = "";
-            setup_avatar.appendChild(makeAvatar(current_player));
-            game_avatar.innerHTML = "";
-            game_avatar.appendChild(makeAvatar(current_player));
-        }
-        function savePicture(username, picture) {
-            var players = loadPlayers();
-            for (let i = 0; i < players.length; i++) {
-                if (players[i].username === username) {
-                    players[i].picture = picture;
-                }
-            }
-            try {
-                savePlayers(players);
-                return true;
-            } catch (error) {
-                return false;
-            }
-        }
-        function setCookie(name, value, days) {
-            document.cookie = name + "=" + encodeURIComponent(value) +
-                "; max-age=" + (days * 24 * 60 * 60) + "; path=/";
-        }
-        function getCookie(name) {
-            var parts = document.cookie.split("; ");
-            for (let i = 0; i < parts.length; i++) {
-                var pair = parts[i].split("=");
-                if (pair[0] === name) {
-                    return decodeURIComponent(pair[1]);
-                }
-            }
-            return null;
-        }
-        function deleteCookie(name) {
-            document.cookie = name + "=; max-age=0; path=/";
         }
         function buildKeyboard() {
             keyboard.innerHTML = "";
@@ -371,7 +289,6 @@
             wrong_guesses = 0;
             game_over = false;
             round_score = 0;
-            hint_used = false;
             score_text.textContent = 0;
             hangman_image.src = "hangman_stages_images/hangman_stage_1.png";
             attempts.innerText = "Attempts: 0/" + data.maxWrong;
@@ -437,12 +354,9 @@
             setup_screen.style.display = "block";
             setup_name.textContent = username;
             current_name.textContent = username;
-            var player = findPlayer(username);
-            var theme = player.theme || "light";
+            var theme = localStorage.getItem("hangman_theme") || "light";
             applyTheme(theme);
             document.querySelector('input[name="theme"][value="' + theme + '"]').checked = true;
-            picture_message.textContent = "";
-            showAvatars();
         }
         function showGame() {
             setup_screen.style.display = "none";
@@ -454,8 +368,6 @@
             signin_screen.style.display = "block";
             username_input.value = "";
             password_input.value = "";
-            confirm_input.value = "";
-            confirm_box.hidden = true;
             player_message.textContent = "";
             applyTheme("light");
         }
@@ -504,36 +416,26 @@
             }
         }
         // Event listeners
-        continue_button.addEventListener("click", function () {
+        continue_button.addEventListener("click", async function () {
             var name = username_input.value.trim();
             var password = password_input.value;
-            var player = findPlayer(name);
-
-            if (name === "") {
-                player_message.textContent = "Please type a username.";
-                return;
-            }
-            if (password.length < 4) {
-                player_message.textContent = "The password must have at least 4 characters.";
+            if (name === "" || password === "") {
+                player_message.textContent = "Please type your username and password.";
                 return;
             }
 
-            if (player === null) {
-                if (password !== confirm_input.value) {
-                    player_message.textContent = "The passwords do not match.";
-                    return;
-                }
-                var players = loadPlayers();
-                players.push({ username: name, password: password });
-                savePlayers(players);
-            } else {
-                if (player.password !== password) {
-                    player_message.textContent = "Wrong password. Try again.";
-                    return;
-                }
+            var form = new FormData();
+            form.append("username", name);
+            form.append("password", password);
+            var response = await fetch("login.php", { method: "POST", body: form });
+            var data = await response.json();
+
+            if (!data.ok) {
+                player_message.textContent = data.message;
+                return;
             }
-            setCookie(COOKIE_NAME, name, 7);
-            showSetup(name);
+            player_message.textContent = "";
+            showSetup(data.username);
         });
         restart_button.addEventListener("click", startNewGame);
         hint_button.addEventListener("click", async function () {
@@ -549,12 +451,8 @@
             round_score = data.score;
             score_text.textContent = data.score;
         });
-        username_input.addEventListener("input", function () {
-            var name = username_input.value.trim();
-            confirm_box.hidden = (name === "" || findPlayer(name) !== null);
-        });
-        function logOut() {
-            deleteCookie(COOKIE_NAME);
+        async function logOut() {
+            await fetch("logout.php");
             showSignIn();
         }
 
@@ -579,14 +477,17 @@
         for (let i = 0; i < theme_radios.length; i++) {
             theme_radios[i].addEventListener("change", function () {
                 applyTheme(theme_radios[i].value);
-                saveTheme(current_player, theme_radios[i].value);
+                localStorage.setItem("hangman_theme", theme_radios[i].value);
             });
         }
         buildKeyboard();
-        var saved_name = getCookie(COOKIE_NAME);
-        if (saved_name !== null && findPlayer(saved_name) !== null) {
-            showSetup(saved_name);
-        }
+        fetch("me.php")
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.loggedIn) {
+                    showSetup(data.username);
+                }
+            });
         end_button.addEventListener("click", async function () {
             if (game_over) {
                 return;

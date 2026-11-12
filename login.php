@@ -1,37 +1,22 @@
 <?php
 session_start();
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 
-$input = json_decode(file_get_contents('php://input'), true);
-$username = trim($input['username'] ?? '');
-$password = trim($input['password'] ?? '');
-if ($username === '') {
-    echo json_encode(["success" => false, "message" => "Username required"]);
+$username = trim($_POST["username"] ?? "");
+$password = $_POST["password"] ?? "";
+
+$text = @file_get_contents(__DIR__ . "/data/users.json");
+$users = ($text === false) ? null : json_decode($text, true);
+if ($users === null) {
+    http_response_code(500);
+    echo json_encode(["ok" => false, "message" => "Cannot read the users file."]);
     exit;
 }
-$usersFile = 'data/users.json';
-$users = [];
-if (file_exists($usersFile)) {
-    $users = json_decode(file_get_contents($usersFile), true) ?? [];
-}
-$authenticated = false;
-foreach ($users as $user) {
-    if ($user['username'] === $username) {
-        if (isset($user['password']) && $user['password'] === $password) {
-            $authenticated = true;
-        }
-        break;
-    }
-}
-if (!$authenticated && empty($users)) {
-    $users[] = ["username" => $username, "password" => $password];
-    file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
-    $authenticated = true;
-}
-if ($authenticated || $password !== '') {
-    $_SESSION['user'] = $username;
-    echo json_encode(["success" => true, "username" => $username]);
+
+if (isset($users[$username]) && $users[$username]["password"] === $password) {
+    $_SESSION["username"] = $username;
+    echo json_encode(["ok" => true, "username" => $username]);
 } else {
-    echo json_encode(["success" => false, "message" => "Invalid credentials"]);
+    http_response_code(401);
+    echo json_encode(["ok" => false, "message" => "Wrong username or password."]);
 }
-?>

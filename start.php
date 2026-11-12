@@ -3,7 +3,11 @@
 session_start();
 header("Content-Type: application/json");
 $level = "easy";
-
+if (!isset($_SESSION["username"])) {
+    http_response_code(401);
+    echo json_encode(["error" => "Please log in first."]);
+    exit;
+}
 if (isset($_POST["level"])) {
     $level = $_POST["level"];
 } elseif (isset($_GET["level"])) {
